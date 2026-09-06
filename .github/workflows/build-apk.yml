@@ -22,13 +22,48 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Create local.properties & Generate Keystore
+      - name: Create local.properties, Keystore & google-services.json
         run: |
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > local.properties
           mkdir -p gradle/wrapper
           echo "android.overrideVersionCheck=true" >> gradle.properties
-          # Tengeneza debug.keystore inayohitajika na mradi
+          
+          # Tengeneza debug.keystore
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
+          # Weka google-services.json kwenye folda sahihi ya app/
+          mkdir -p app
+          cat << 'EOF' > app/google-services.json
+          {
+            "project_info": {
+              "project_number": "123456789012",
+              "project_id": "maige-photo-ai",
+              "storage_bucket": "maige-photo-ai.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:123456789012:android:1234567890123456789012",
+                  "android_client_info": {
+                    "package_name": "com.example.maigephotoai"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [
+                  {
+                    "current_key": "${{ secrets.GEMINI_API_KEY }}"
+                  }
+                ],
+                "services": {
+                  "appinvite_service": {
+                    "other_platform_oauth_client": []
+                  }
+                }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
 
       - name: Generate Gradle Wrapper
         run: |
