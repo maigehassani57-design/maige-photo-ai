@@ -22,9 +22,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Create local.properties
+      - name: Create local.properties & override gradle check
         run: |
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > local.properties
+          mkdir -p gradle/wrapper
+          echo "android.overrideVersionCheck=true" >> gradle.properties
 
       - name: Generate Gradle Wrapper
         run: |
