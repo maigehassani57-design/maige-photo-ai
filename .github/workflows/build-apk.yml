@@ -11,19 +11,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract zip and locate project files
+      - name: Extract zip contents
         run: |
-          unzip -o remix-maige-photo-ai.zip -d unzipped/
-          GRADLEW_PATH=$(find unzipped/ -name "gradlew" -type f | head -n 1)
-          if [ -n "$GRADLEW_PATH" ]; then
-            PROJECT_DIR=$(dirname "$GRADLEW_PATH")
-            echo "Found project directory at: $PROJECT_DIR"
-            cp -r "$PROJECT_DIR"/* .
-            cp -r "$PROJECT_DIR"/.[^.]* . 2>/dev/null || true
-          else
-            echo "Error: gradlew not found inside the ZIP file!"
-            exit 1
-          fi
+          unzip -o remix-maige-photo-ai.zip -d .
+          shopt -s dotglob
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -35,8 +26,10 @@ jobs:
         run: |
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > local.properties
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Generate Gradle Wrapper
+        run: |
+          gradle wrapper --gradle-version 8.5
+          chmod +x gradlew
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug
