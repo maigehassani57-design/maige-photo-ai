@@ -11,18 +11,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract zip contents and organize
+      - name: Extract zip and locate project files
         run: |
-          unzip -o remix-maige-photo-ai.zip -d extracted_files/
-          shopt -s dotglob
-          if [ -d "extracted_files/remix-maige-photo-ai" ]; then
-            cp -r extracted_files/remix-maico-photo-ai/* . 2>/dev/null || true
-            cp -r extracted_files/remix-maige-photo-ai/* . 2>/dev/null || true
-          fi
-          # Fallback kama zip imejificha kwenye folda nyingine yoyote
-          FOUND_DIR=$(find extracted_files/ -mindepth 1 -maxdepth 1 -type d | head -n 1)
-          if [ -n "$FOUND_DIR" ]; then
-            cp -r "$FOUND_DIR"/* . 2>/dev/null || true
+          unzip -o remix-maige-photo-ai.zip -d unzipped/
+          GRADLEW_PATH=$(find unzipped/ -name "gradlew" -type f | head -n 1)
+          if [ -n "$GRADLEW_PATH" ]; then
+            PROJECT_DIR=$(dirname "$GRADLEW_PATH")
+            echo "Found project directory at: $PROJECT_DIR"
+            cp -r "$PROJECT_DIR"/* .
+            cp -r "$PROJECT_DIR"/.[^.]* . 2>/dev/null || true
+          else
+            echo "Error: gradlew not found inside the ZIP file!"
+            exit 1
           fi
 
       - name: Set up JDK 17
@@ -36,8 +36,7 @@ jobs:
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" > local.properties
 
       - name: Grant execute permission for gradlew
-        run: |
-          chmod +x gradlew
+        run: chmod +x gradlew
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug
